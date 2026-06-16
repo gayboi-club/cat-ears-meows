@@ -31,8 +31,7 @@ public class CatEarsModel<T extends LivingEntity> extends HumanoidModel<T> {
         root.addOrReplaceChild("left_leg", CubeListBuilder.create(), PartPose.ZERO);
 
         // fluffy anime cat ears :3
-        // pivot sunk into head :3
-        PartDefinition leftEar = head.addOrReplaceChild("left_ear", CubeListBuilder.create(), 
+        PartDefinition leftEar = head.addOrReplaceChild("left_ear", CubeListBuilder.create(),
             PartPose.offsetAndRotation(3.0F, -8.0F, -0.5F, 0.0F, 0.0F, 0.25F));
 
         // rims (outer fur) :3
@@ -56,7 +55,7 @@ public class CatEarsModel<T extends LivingEntity> extends HumanoidModel<T> {
         leftEar.addOrReplaceChild("left_bell", CubeListBuilder.create().texOffs(0, 16).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 2.0F, 2.0F), PartPose.offset(1.5F, 1.0F, -1.0F));
 
         // right ear :3
-        PartDefinition rightEar = head.addOrReplaceChild("right_ear", CubeListBuilder.create(), 
+        PartDefinition rightEar = head.addOrReplaceChild("right_ear", CubeListBuilder.create(),
             PartPose.offsetAndRotation(-3.0F, -8.0F, -0.5F, 0.0F, 0.0F, -0.25F));
 
         // rims (outer fur) :3

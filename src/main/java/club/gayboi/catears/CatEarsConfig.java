@@ -1,24 +1,50 @@
 package club.gayboi.catears;
 
-import net.neoforged.neoforge.common.ModConfigSpec;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.nio.file.Path;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import net.fabricmc.loader.api.FabricLoader;
 
 public class CatEarsConfig {
-    public static final ModConfigSpec SPEC;
-    public static final ModConfigSpec.BooleanValue ENABLE_MEOWING;
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("catears.json");
 
-    static {
-        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
+    public static boolean enableMeowing = true;
 
-        builder.comment("Cat Ears & Meows Configuration");
-        builder.push("general");
+    public static void load() {
+        try {
+            if (CONFIG_PATH.toFile().exists()) {
+                try (FileReader reader = new FileReader(CONFIG_PATH.toFile())) {
+                    ConfigData data = GSON.fromJson(reader, ConfigData.class);
+                    if (data != null) {
+                        enableMeowing = data.enableMeowing;
+                    }
+                }
+            } else {
+                save();
+            }
+        } catch (Exception e) {
+            CatEarsMod.LOGGER.error("Failed to load config, using defaults", e);
+        }
+    }
 
-        ENABLE_MEOWING = builder
-                .comment("Whether wearing cat ears makes you meow when sending chat messages.",
-                         "Set to false to disable meowing sounds.")
-                .define("enableMeowing", true);
+    public static void save() {
+        try {
+            try (FileWriter writer = new FileWriter(CONFIG_PATH.toFile())) {
+                GSON.toJson(new ConfigData(enableMeowing), writer);
+            }
+        } catch (Exception e) {
+            CatEarsMod.LOGGER.error("Failed to save config", e);
+        }
+    }
 
-        builder.pop();
-
-        SPEC = builder.build();
+    private static record ConfigData(boolean enableMeowing) {
+        private ConfigData() {
+            this(true);
+        }
     }
 }
