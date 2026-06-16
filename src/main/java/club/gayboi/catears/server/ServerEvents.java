@@ -38,34 +38,7 @@ public class ServerEvents {
             }
         }
 
-        // check trinkets slot :3
-        if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("trinkets")) {
-            return TrinketsCompat.hasCatEars(player);
-        }
-
         return false;
-    }
-
-    private static class TrinketsCompat {
-        static boolean hasCatEars(ServerPlayer player) {
-            try {
-                Class<?> trinketsApi = Class.forName("dev.emi.trinkets.api.TrinketsApi");
-                var inventory = trinketsApi.getMethod("getTrinketComponent", net.minecraft.world.entity.LivingEntity.class)
-                        .invoke(null, player);
-                if (inventory == null) return false;
-
-                var invClass = Class.forName("dev.emi.trinkets.api.TrinketComponent");
-                var isEquipped = invClass.getMethod("isEquipped", net.minecraft.world.item.Item.class);
-
-                for (var catEarItem : ModItems.CAT_EARS.values()) {
-                    if ((boolean) isEquipped.invoke(inventory, catEarItem)) {
-                        return true;
-                    }
-                }
-            } catch (Exception e) { // ignore errors :3
-            }
-            return false;
-        }
     }
 
     public static void register() {

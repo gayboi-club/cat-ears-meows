@@ -25,8 +25,7 @@ dependencies {
     })
     modImplementation("net.fabricmc:fabric-loader:${loader_version}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
-    modCompileOnly("dev.emi:trinkets:${trinkets_version}")
-    modRuntimeOnly("dev.emi:trinkets:${trinkets_version}")
+
 }
 
 processResources {
