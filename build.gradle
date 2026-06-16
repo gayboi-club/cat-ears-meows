@@ -8,7 +8,7 @@ version = mod_version
 group = "club.gayboi.${mod_id}"
 
 base {
-    archivesName = mod_id
+    archivesName = "${mod_id}-neoforge"
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
