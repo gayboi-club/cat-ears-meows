@@ -5,10 +5,10 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 import club.gayboi.catears.CatEarsConfig;
 import club.gayboi.catears.network.MeowConfigPayload;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
 public class CatEarsConfigScreen extends Screen {
     private final Screen parent;
@@ -27,13 +27,14 @@ public class CatEarsConfigScreen extends Screen {
         this.addRenderableWidget(Button.builder(
                 getMeowButtonText(),
                 button -> {
-                    boolean newValue = !CatEarsConfig.ENABLE_MEOWING.get();
-                    CatEarsConfig.ENABLE_MEOWING.set(newValue);
+                    boolean newValue = !CatEarsConfig.enableMeowing;
+                    CatEarsConfig.enableMeowing = newValue;
+                    CatEarsConfig.save();
                     button.setMessage(getMeowButtonText());
                     // sync with server :3
                     if (this.minecraft != null && this.minecraft.getConnection() != null) {
                         try {
-                            PacketDistributor.sendToServer(new MeowConfigPayload(newValue));
+                            ClientPlayNetworking.send(new MeowConfigPayload(newValue));
                         } catch (Exception ignored) {
                         }
                     }
@@ -48,7 +49,7 @@ public class CatEarsConfigScreen extends Screen {
     }
 
     private static Component getMeowButtonText() {
-        boolean enabled = CatEarsConfig.ENABLE_MEOWING.get();
+        boolean enabled = CatEarsConfig.enableMeowing;
         return Component.literal("Enable Meowing: ").append(
                 enabled
                         ? Component.literal("ON").withStyle(ChatFormatting.GREEN)

@@ -4,20 +4,17 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.ServerChatEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 import club.gayboi.catears.CatEarsMod;
 import club.gayboi.catears.ModItems;
 
-@EventBusSubscriber(modid = CatEarsMod.MOD_ID)
 public class ServerEvents {
     // per-player meow pref :3
     private static final Map<UUID, Boolean> playerMeowPreferences = new ConcurrentHashMap<>();
@@ -36,31 +33,32 @@ public class ServerEvents {
         // check helmet slot :3
         ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
         for (var catEarItem : ModItems.CAT_EARS.values()) {
-            if (helmet.is(catEarItem.get())) {
+            if (helmet.is(catEarItem)) {
                 return true;
             }
         }
 
-        // check curios slot :3
-        if (net.neoforged.fml.ModList.get().isLoaded("curios")) {
-            return CuriosCompat.hasCatEars(player);
+        // check trinkets slot :3
+        if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("trinkets")) {
+            return TrinketsCompat.hasCatEars(player);
         }
 
         return false;
     }
 
-    private static class CuriosCompat {
+    private static class TrinketsCompat {
         static boolean hasCatEars(ServerPlayer player) {
             try {
-                Class<?> curiosApi = Class.forName("top.theillusivec4.curios.api.CuriosApi");
-                Object helper = curiosApi.getMethod("getCuriosHelper").invoke(null);
-                Class<?> helperClass = Class.forName("top.theillusivec4.curios.api.ICuriosHelper");
+                Class<?> trinketsApi = Class.forName("dev.emi.trinkets.api.TrinketsApi");
+                var inventory = trinketsApi.getMethod("getTrinketComponent", net.minecraft.world.entity.LivingEntity.class)
+                        .invoke(null, player);
+                if (inventory == null) return false;
 
-                // try findFirstCurio :3
+                var invClass = Class.forName("dev.emi.trinkets.api.TrinketComponent");
+                var isEquipped = invClass.getMethod("isEquipped", net.minecraft.world.item.Item.class);
+
                 for (var catEarItem : ModItems.CAT_EARS.values()) {
-                    java.util.Optional<?> result = (java.util.Optional<?>) helperClass.getMethod("findFirstCurio", net.minecraft.world.entity.LivingEntity.class, net.minecraft.world.item.Item.class)
-                            .invoke(helper, player, catEarItem.get());
-                    if (result.isPresent()) {
+                    if ((boolean) isEquipped.invoke(inventory, catEarItem)) {
                         return true;
                     }
                 }
@@ -70,37 +68,35 @@ public class ServerEvents {
         }
     }
 
-    @SubscribeEvent
-    public static void onChat(ServerChatEvent event) {
-        ServerPlayer player = event.getPlayer();
+    public static void register() {
+        ServerMessageEvents.CHAT_MESSAGE.register((message, sender, params) -> {
+            if (!isWearingCatEars(sender)) return;
 
-        if (!isWearingCatEars(player)) return;
+            // check meow enabled :3
+            if (!isPlayerMeowEnabled(sender.getUUID())) return;
 
-        // check meow enabled :3
-        if (!isPlayerMeowEnabled(player.getUUID())) return;
+            // determine sound :3
+            String rawText = message.signedBody().content().trim();
+            var sound = SoundEvents.CAT_AMBIENT;
+            if (rawText.endsWith("!!")) {
+                sound = SoundEvents.CAT_HISS;
+            } else if (PURR_PATTERN.matcher(rawText).matches()) {
+                sound = SoundEvents.CAT_PURR;
+            }
 
-        // determine sound :3
-        String rawText = event.getMessage().getString().trim();
-        var sound = SoundEvents.CAT_AMBIENT;
-        if (rawText.endsWith("!!")) {
-            sound = SoundEvents.CAT_HISS;
-        } else if (PURR_PATTERN.matcher(rawText).matches()) {
-            sound = SoundEvents.CAT_PURR;
-        }
+            // play sound for nearby :3
+            sender.level().playSound(
+                    null, // don't exclude :3
+                    sender.getX(), sender.getY(), sender.getZ(),
+                    sound,
+                    SoundSource.PLAYERS,
+                    1.0F, 1.0F
+            );
+        });
 
-        // play sound for nearby :3
-        player.level().playSound(
-                null, // don't exclude :3
-                player.getX(), player.getY(), player.getZ(),
-                sound,
-                SoundSource.PLAYERS,
-                1.0F, 1.0F
-        );
-    }
-
-    @SubscribeEvent
-    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-        // cleanup prefs on logout :3
-        playerMeowPreferences.remove(event.getEntity().getUUID());
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            // cleanup prefs on logout :3
+            playerMeowPreferences.remove(handler.player.getUUID());
+        });
     }
 }

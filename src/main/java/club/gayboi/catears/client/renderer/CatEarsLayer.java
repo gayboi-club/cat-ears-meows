@@ -44,12 +44,7 @@ public class CatEarsLayer<T extends LivingEntity, M extends EntityModel<T>> exte
     }
 
     private boolean isCatEars(Item item) {
-        for (var deferredItem : club.gayboi.catears.ModItems.CAT_EARS.values()) {
-            if (item == deferredItem.get()) {
-                return true;
-            }
-        }
-        return false;
+        return ModItems.CAT_EARS.containsValue(item);
     }
 
     private ResourceLocation getCatEarsTexture(Item item) {
