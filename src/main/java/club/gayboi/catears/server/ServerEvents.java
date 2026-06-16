@@ -41,33 +41,7 @@ public class ServerEvents {
             }
         }
 
-        // check curios slot :3
-        if (net.neoforged.fml.ModList.get().isLoaded("curios")) {
-            return CuriosCompat.hasCatEars(player);
-        }
-
         return false;
-    }
-
-    private static class CuriosCompat {
-        static boolean hasCatEars(ServerPlayer player) {
-            try {
-                Class<?> curiosApi = Class.forName("top.theillusivec4.curios.api.CuriosApi");
-                Object helper = curiosApi.getMethod("getCuriosHelper").invoke(null);
-                Class<?> helperClass = Class.forName("top.theillusivec4.curios.api.ICuriosHelper");
-
-                // try findFirstCurio :3
-                for (var catEarItem : ModItems.CAT_EARS.values()) {
-                    java.util.Optional<?> result = (java.util.Optional<?>) helperClass.getMethod("findFirstCurio", net.minecraft.world.entity.LivingEntity.class, net.minecraft.world.item.Item.class)
-                            .invoke(helper, player, catEarItem.get());
-                    if (result.isPresent()) {
-                        return true;
-                    }
-                }
-            } catch (Exception e) { // ignore errors :3
-            }
-            return false;
-        }
     }
 
     @SubscribeEvent

@@ -40,16 +40,7 @@ neoForge {
     }
 }
 
-repositories {
-    maven {
-        name = "Curios Maven"
-        url = "https://maven.theillusivec4.top/"
-    }
-}
-
 dependencies {
-    compileOnly("top.theillusivec4.curios:curios-neoforge:9.4.0+1.21.1")
-    runtimeOnly("top.theillusivec4.curios:curios-neoforge:9.4.0+1.21.1")
 }
 
 tasks.withType(ProcessResources).configureEach {
