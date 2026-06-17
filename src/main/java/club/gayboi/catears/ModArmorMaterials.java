@@ -1,45 +1,43 @@
 package club.gayboi.catears;
 
-import java.util.EnumMap;
-import java.util.List;
+import java.util.Map;
 
-import net.minecraft.Util;
-import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.ArmorMaterial;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.equipment.ArmorMaterial;
+import net.minecraft.world.item.equipment.ArmorType;
+import net.minecraft.world.item.equipment.EquipmentAsset;
+import net.minecraft.world.item.equipment.EquipmentAssets;
 
 public class ModArmorMaterials {
-    public static final Holder<ArmorMaterial> CAT_EARS = Registry.registerForHolder(
-            BuiltInRegistries.ARMOR_MATERIAL,
-            ResourceLocation.fromNamespaceAndPath(CatEarsMod.MOD_ID, "cat_ears"),
-            new ArmorMaterial(
-                    // defense per slot :3
-                    Util.make(new EnumMap<>(ArmorItem.Type.class), map -> {
-                        map.put(ArmorItem.Type.HELMET, 1);
-                        map.put(ArmorItem.Type.CHESTPLATE, 0);
-                        map.put(ArmorItem.Type.LEGGINGS, 0);
-                        map.put(ArmorItem.Type.BOOTS, 0);
-                        map.put(ArmorItem.Type.BODY, 0);
-                    }),
-                    15, // enchantment value :3
-                    BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.CAT_AMBIENT), // equip sound :3
-                    () -> Ingredient.of(Items.STRING), // repair ingredient :3
-                    // armor texture layers :3
-                    List.of(new ArmorMaterial.Layer(
-                            ResourceLocation.fromNamespaceAndPath(CatEarsMod.MOD_ID, "cat_ears")
-                    )),
-                    0.0F, // toughness :3
-                    0.0F // knockback resistance :3
-            )
+    public static final int BASE_DURABILITY = 55;
+
+    public static final TagKey<Item> REPAIRS_CAT_EARS = TagKey.create(
+            BuiltInRegistries.ITEM.key(),
+            Identifier.fromNamespaceAndPath(CatEarsMod.MOD_ID, "repairs_cat_ears")
+    );
+
+    public static final ResourceKey<EquipmentAsset> CAT_EARS_ARMOR_MATERIAL_KEY = ResourceKey.create(
+            EquipmentAssets.ROOT_ID,
+            Identifier.fromNamespaceAndPath(CatEarsMod.MOD_ID, "cat_ears")
+    );
+
+    public static final ArmorMaterial CAT_EARS = new ArmorMaterial(
+            BASE_DURABILITY,
+            Map.of(ArmorType.HELMET, 1),
+            15, // enchantment value :3
+            BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.CAT_AMBIENT),
+            0.0F, // toughness :3
+            0.0F, // knockback resistance :3
+            REPAIRS_CAT_EARS,
+            CAT_EARS_ARMOR_MATERIAL_KEY
     );
 
     public static void register() {
-        // registered inline via registerForHolder :3
+        // material is used directly via instance, no registry needed :3
     }
 }

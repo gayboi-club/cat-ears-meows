@@ -11,6 +11,6 @@ public class ClientEvents {
             "key.catears.config",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_K,
-            "key.categories.catears"
+            KeyMapping.Category.MISC
     );
 }

@@ -5,10 +5,12 @@ import java.util.Map;
 
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ArmorItem;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.equipment.ArmorType;
 
 public class ModItems {
     // all 16 color variants :3
@@ -17,13 +19,18 @@ public class ModItems {
     public static void register() {
         for (DyeColor color : DyeColor.values()) {
             String name = color.getName() + "_cat_ears";
+            ResourceKey<Item> itemKey = ResourceKey.create(
+                    Registries.ITEM,
+                    Identifier.fromNamespaceAndPath(CatEarsMod.MOD_ID, name)
+            );
             Item item = Registry.register(
                     BuiltInRegistries.ITEM,
-                    ResourceLocation.fromNamespaceAndPath(CatEarsMod.MOD_ID, name),
-                    new ArmorItem(
-                            ModArmorMaterials.CAT_EARS,
-                            ArmorItem.Type.HELMET,
-                            new Item.Properties().durability(55)
+                    itemKey,
+                    new Item(
+                            new Item.Properties()
+                                    .humanoidArmor(ModArmorMaterials.CAT_EARS, ArmorType.HELMET)
+                                    .durability(ArmorType.HELMET.getDurability(ModArmorMaterials.BASE_DURABILITY))
+                                    .setId(itemKey)
                     )
             );
             CAT_EARS.put(color, item);

@@ -1,20 +1,25 @@
 package club.gayboi.catears.client.model;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
-import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 
-public class CatEarsModel<T extends LivingEntity> extends HumanoidModel<T> {
+public class CatEarsModel extends EntityModel<EntityRenderState> {
+    public final ModelPart head;
+
     public CatEarsModel(ModelPart root) {
         super(root);
+        this.head = root.getChild("head");
+    }
+
+    @Override
+    public void setupAnim(EntityRenderState state) {
+        // head pose copied from parent model at render time :3
     }
 
     public static LayerDefinition createBodyLayer() {
