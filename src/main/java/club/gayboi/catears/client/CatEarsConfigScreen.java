@@ -1,7 +1,7 @@
 package club.gayboi.catears.client;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -58,14 +58,14 @@ public class CatEarsConfigScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphicsExtractor, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(guiGraphicsExtractor, mouseX, mouseY, partialTick);
         // draw title :3
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 48, 0xFFFFFF);
+        guiGraphicsExtractor.centeredText(this.font, this.title, this.width / 2, this.height / 2 - 48, 0xFFFFFFFF);
         // draw subtitle :3
-        guiGraphics.drawCenteredString(this.font,
+        guiGraphicsExtractor.centeredText(this.font,
                 Component.literal("by gayboi.club").withStyle(ChatFormatting.GRAY),
-                this.width / 2, this.height / 2 - 36, 0xAAAAAA);
+                this.width / 2, this.height / 2 - 36, 0xFFAAAAAA);
     }
 
     @Override

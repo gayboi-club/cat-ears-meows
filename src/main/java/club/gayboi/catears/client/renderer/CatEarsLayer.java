@@ -46,7 +46,7 @@ public class CatEarsLayer extends RenderLayer {
         }
 
         // render head only :3
-        submitNodeCollector.submitModelPart(this.model.head, poseStack, RenderTypes.entityCutoutNoCull(texture), packedLight, LivingEntityRenderer.getOverlayCoords(state, 0.0F), null);
+        submitNodeCollector.submitModelPart(this.model.head, poseStack, RenderTypes.entityCutout(texture), packedLight, LivingEntityRenderer.getOverlayCoords(state, 0.0F), null);
     }
 
     private boolean isCatEars(Item item) {
