@@ -1,13 +1,15 @@
 package club.gayboi.catears.server;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
+import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
@@ -50,11 +52,11 @@ public class ServerEvents {
 
             // determine sound :3
             String rawText = message.signedBody().content().trim();
-            var sound = SoundEvents.CAT_AMBIENT;
+            var sound = new SoundEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.cat.ambient"), Optional.empty());
             if (rawText.endsWith("!!")) {
-                sound = SoundEvents.CAT_HISS;
+                sound = new SoundEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.cat.hiss"), Optional.empty());
             } else if (PURR_PATTERN.matcher(rawText).matches()) {
-                sound = SoundEvents.CAT_PURR;
+                sound = new SoundEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.cat.purr"), Optional.empty());
             }
 
             // play sound for nearby :3

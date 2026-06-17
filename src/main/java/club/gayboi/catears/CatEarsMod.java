@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
@@ -32,7 +32,7 @@ public class CatEarsMod implements ModInitializer {
         // creative tab :3
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
                 Identifier.fromNamespaceAndPath(MOD_ID, "cat_ears_tab"),
-                FabricItemGroup.builder()
+                FabricCreativeModeTab.builder()
                         .title(Component.translatable("itemGroup.catears"))
                         .icon(() -> ModItems.CAT_EARS.get(DyeColor.WHITE).getDefaultInstance())
                         .displayItems((params, output) -> {
@@ -50,7 +50,7 @@ public class CatEarsMod implements ModInitializer {
         club.gayboi.catears.server.ServerEvents.register();
 
         // register network payloads :3
-        PayloadTypeRegistry.playC2S().register(MeowConfigPayload.TYPE, MeowConfigPayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(MeowConfigPayload.TYPE, MeowConfigPayload.STREAM_CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(MeowConfigPayload.TYPE, (payload, context) -> {
             context.server().execute(() -> {

@@ -1,5 +1,5 @@
 plugins {
-    id("fabric-loom") version "1.15-SNAPSHOT"
+    id("net.fabricmc.fabric-loom") version "1.17.11"
     id("java-library")
 }
 
@@ -10,7 +10,7 @@ base {
     archivesName = "${mod_id}-fabric-${minecraft_version}"
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 repositories {
     mavenCentral()
@@ -20,11 +20,8 @@ repositories {
 
 dependencies {
     minecraft("com.mojang:minecraft:${minecraft_version}")
-    mappings(loom.layered {
-        officialMojangMappings()
-    })
-    modImplementation("net.fabricmc:fabric-loader:${loader_version}")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
+    implementation("net.fabricmc:fabric-loader:${loader_version}")
+    implementation("net.fabricmc.fabric-api:fabric-api:${fabric_version}")
 
 }
 
