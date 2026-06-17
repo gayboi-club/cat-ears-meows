@@ -9,7 +9,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 
 import club.gayboi.catears.CatEarsConfig;
@@ -20,7 +20,7 @@ import club.gayboi.catears.network.MeowConfigPayload;
 
 public class CatEarsClientMod implements ClientModInitializer {
     public static final ModelLayerLocation CAT_EARS_LAYER = new ModelLayerLocation(
-            ResourceLocation.fromNamespaceAndPath(CatEarsMod.MOD_ID, "cat_ears"), "main");
+            Identifier.fromNamespaceAndPath(CatEarsMod.MOD_ID, "cat_ears"), "main");
 
     @Override
     public void onInitializeClient() {
@@ -31,11 +31,15 @@ public class CatEarsClientMod implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(CAT_EARS_LAYER, CatEarsModel::createBodyLayer);
 
         // add layer to player renderers :3
-        LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, renderer, helper, ctx) -> {
+        LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, renderer, helper, context) -> {
             if (entityType == EntityType.PLAYER) {
-                var model = new CatEarsModel<>(
+                var model = new CatEarsModel(
                         Minecraft.getInstance().getEntityModels().bakeLayer(CAT_EARS_LAYER));
-                helper.register(new CatEarsLayer(renderer, model));
+                @SuppressWarnings({"unchecked", "rawtypes"})
+                var layer = new CatEarsLayer(renderer, model);
+                @SuppressWarnings({"rawtypes"})
+                var typedHelper = helper;
+                typedHelper.register(layer);
             }
         });
 

@@ -11,7 +11,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.DyeColor;
 
 import club.gayboi.catears.network.MeowConfigPayload;
@@ -31,7 +31,7 @@ public class CatEarsMod implements ModInitializer {
 
         // creative tab :3
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
-                ResourceLocation.fromNamespaceAndPath(MOD_ID, "cat_ears_tab"),
+                Identifier.fromNamespaceAndPath(MOD_ID, "cat_ears_tab"),
                 FabricItemGroup.builder()
                         .title(Component.translatable("itemGroup.catears"))
                         .icon(() -> ModItems.CAT_EARS.get(DyeColor.WHITE).getDefaultInstance())
