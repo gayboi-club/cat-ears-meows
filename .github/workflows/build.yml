@@ -1,0 +1,25 @@
+name: build
+
+on:
+  push:
+    branches: [testing/fabric-26.2]
+  pull_request:
+    branches: [testing/fabric-26.2]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.event_name != 'push' }}
+      - run: ./gradlew build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CatEars
+          path: build/libs/*.jar
