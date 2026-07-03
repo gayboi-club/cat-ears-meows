@@ -7,9 +7,9 @@
     " S "
   ],
   "key": {
-    "W": { "item": "minecraft:yellow_wool" },
-    "S": { "item": "minecraft:string" },
-    "R": { "item": "minecraft:redstone" }
+    "W": "minecraft:yellow_wool",
+    "S": "minecraft:string",
+    "R": "minecraft:redstone"
   },
   "result": {
     "id": "catears:yellow_cat_ears",

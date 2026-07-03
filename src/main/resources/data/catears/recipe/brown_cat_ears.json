@@ -7,9 +7,9 @@
     " S "
   ],
   "key": {
-    "W": { "item": "minecraft:brown_wool" },
-    "S": { "item": "minecraft:string" },
-    "R": { "item": "minecraft:redstone" }
+    "W": "minecraft:brown_wool",
+    "S": "minecraft:string",
+    "R": "minecraft:redstone"
   },
   "result": {
     "id": "catears:brown_cat_ears",

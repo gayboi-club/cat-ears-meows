@@ -7,9 +7,9 @@
     " S "
   ],
   "key": {
-    "W": { "item": "minecraft:magenta_wool" },
-    "S": { "item": "minecraft:string" },
-    "R": { "item": "minecraft:redstone" }
+    "W": "minecraft:magenta_wool",
+    "S": "minecraft:string",
+    "R": "minecraft:redstone"
   },
   "result": {
     "id": "catears:magenta_cat_ears",
