@@ -22,6 +22,8 @@ public class ServerEvents {
     private static final Map<UUID, Boolean> playerMeowPreferences = new ConcurrentHashMap<>();
     // per-player max fall distance tracker :3
     private static final Map<UUID, Double> playerFallDistances = new ConcurrentHashMap<>();
+    // per-player hurt sound debounce :3
+    private static final Map<UUID, Long> lastHurtSoundTime = new ConcurrentHashMap<>();
 
     public static void setPlayerMeowEnabled(UUID playerId, boolean enabled) {
         playerMeowPreferences.put(playerId, enabled);
@@ -84,6 +86,12 @@ public class ServerEvents {
             if (!(entity instanceof ServerPlayer player)) return true;
             if (!isWearingCatEars(player)) return true;
 
+            long now = System.currentTimeMillis();
+            long last = lastHurtSoundTime.getOrDefault(player.getUUID(), 0L);
+            if (now - last < 200) return true;
+
+            lastHurtSoundTime.put(player.getUUID(), now);
+
             player.level().playSound(
                     null,
                     player.getX(), player.getY(), player.getZ(),
@@ -130,6 +138,7 @@ public class ServerEvents {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             playerMeowPreferences.remove(handler.player.getUUID());
             playerFallDistances.remove(handler.player.getUUID());
+            lastHurtSoundTime.remove(handler.player.getUUID());
         });
     }
 }
