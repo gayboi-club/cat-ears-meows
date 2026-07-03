@@ -14,7 +14,7 @@ The keybind to configure your cat ears (currently there's just a toggle)
 
 ![Keybind in settings](https://cdn.modrinth.com/data/cached_images/2c416edda59854bd956ef2187563bcdf71811d3d.png)
 
-Cat ears can be worn in the helmet slot, but this mod also has an optional [Curios](https://modrinth.com/mod/curios) dependency you can install!
+Cat ears can be worn in the helmet slot.
 
 ![glitchy wearing cat ears :3c](https://cdn.modrinth.com/data/cached_images/17f6f6702d81429001abcd26ec71d8d46e26c37a.png)
 
