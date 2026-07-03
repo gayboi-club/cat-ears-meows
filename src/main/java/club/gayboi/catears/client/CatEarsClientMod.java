@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegist
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 
 import club.gayboi.catears.CatEarsConfig;
 import club.gayboi.catears.CatEarsMod;
@@ -32,7 +32,7 @@ public class CatEarsClientMod implements ClientModInitializer {
 
         // add layer to player renderers :3
         LivingEntityRenderLayerRegistrationCallback.EVENT.register((entityType, renderer, helper, context) -> {
-            if (entityType == EntityType.PLAYER) {
+            if (entityType == EntityTypes.PLAYER) {
                 var model = new CatEarsModel(
                         Minecraft.getInstance().getEntityModels().bakeLayer(CAT_EARS_LAYER));
                 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -46,7 +46,7 @@ public class CatEarsClientMod implements ClientModInitializer {
         // client tick for config key :3
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (ClientEvents.CONFIG_KEY.consumeClick()) {
-                client.setScreen(new CatEarsConfigScreen(null));
+                client.setScreenAndShow(new CatEarsConfigScreen(null));
             }
         });
 
