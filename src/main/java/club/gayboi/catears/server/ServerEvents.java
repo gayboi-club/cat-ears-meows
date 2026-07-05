@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -22,10 +21,10 @@ import club.gayboi.catears.ModItems;
 public class ServerEvents {
     // per-player meow pref :3
     private static final Map<UUID, Boolean> playerMeowPreferences = new ConcurrentHashMap<>();
-    // per-player max fall distance tracker :3
-    private static final Map<UUID, Double> playerFallDistances = new ConcurrentHashMap<>();
     // per-player hurt sound debounce :3
     private static final Map<UUID, Long> lastHurtSoundTime = new ConcurrentHashMap<>();
+    // per-player health for detecting damage :3
+    private static final Map<UUID, Float> playerHealths = new ConcurrentHashMap<>();
 
     public static void setPlayerMeowEnabled(UUID playerId, boolean enabled) {
         playerMeowPreferences.put(playerId, enabled);
@@ -52,7 +51,6 @@ public class ServerEvents {
     public static void register() {
         chatMeowSound();
         hurtSound();
-        landingSound();
         disconnectCleanup();
     }
 
@@ -84,54 +82,30 @@ public class ServerEvents {
     }
 
     private static void hurtSound() {
-        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
-            if (!(entity instanceof ServerPlayer player)) return true;
-            if (!isWearingCatEars(player)) return true;
-
-            long now = System.currentTimeMillis();
-            long last = lastHurtSoundTime.getOrDefault(player.getUUID(), 0L);
-            if (now - last < 200) return true;
-
-            lastHurtSoundTime.put(player.getUUID(), now);
-
-            player.level().playSound(
-                    null,
-                    player.getX(), player.getY(), player.getZ(),
-                    new SoundEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.cat.hurt"), Optional.empty()),
-                    SoundSource.PLAYERS,
-                    1.0F, 1.0F
-            );
-
-            return true;
-        });
-    }
-
-    private static void landingSound() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                if (!isWearingCatEars(player)) continue;
+
                 UUID id = player.getUUID();
-                if (!isWearingCatEars(player)) {
-                    playerFallDistances.remove(id);
-                    continue;
-                }
+                float prevHealth = playerHealths.getOrDefault(id, player.getHealth());
+                float currentHealth = player.getHealth();
 
-                double currentFall = player.fallDistance;
-                double trackedMax = playerFallDistances.getOrDefault(id, 0.0);
-
-                if (player.onGround()) {
-                    if (trackedMax >= 2.0) {
+                if (currentHealth < prevHealth) {
+                    long now = System.currentTimeMillis();
+                    long last = lastHurtSoundTime.getOrDefault(id, 0L);
+                    if (now - last >= 200) {
+                        lastHurtSoundTime.put(id, now);
                         player.level().playSound(
                                 null,
                                 player.getX(), player.getY(), player.getZ(),
-                                new SoundEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.cat.ambient"), Optional.empty()),
+                                new SoundEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.cat.hurt"), Optional.empty()),
                                 SoundSource.PLAYERS,
                                 1.0F, 1.0F
                         );
                     }
-                    playerFallDistances.put(id, 0.0);
-                } else {
-                    playerFallDistances.put(id, Math.max(trackedMax, currentFall));
                 }
+
+                playerHealths.put(id, currentHealth);
             }
         });
     }
@@ -139,7 +113,7 @@ public class ServerEvents {
     private static void disconnectCleanup() {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             playerMeowPreferences.remove(handler.player.getUUID());
-            playerFallDistances.remove(handler.player.getUUID());
+            playerHealths.remove(handler.player.getUUID());
             lastHurtSoundTime.remove(handler.player.getUUID());
         });
     }

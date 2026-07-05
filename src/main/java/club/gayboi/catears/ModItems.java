@@ -29,7 +29,6 @@ public class ModItems {
                     new Item(
                             new Item.Properties()
                                     .humanoidArmor(ModArmorMaterials.CAT_EARS, ArmorType.HELMET)
-                                    .durability(ArmorType.HELMET.getDurability(ModArmorMaterials.BASE_DURABILITY))
                                     .setId(itemKey)
                     )
             );

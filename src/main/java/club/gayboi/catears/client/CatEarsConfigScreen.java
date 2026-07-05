@@ -5,67 +5,112 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.DyeColor;
 
 import club.gayboi.catears.CatEarsConfig;
 import club.gayboi.catears.network.MeowConfigPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class CatEarsConfigScreen extends Screen {
     private final Screen parent;
+
+    private static final List<DyeColor> COLORS = Arrays.asList(DyeColor.values());
+    private int colorIndex;
 
     public CatEarsConfigScreen(Screen parent) {
         super(Component.literal("Cat Ears & Meows"));
         this.parent = parent;
+        DyeColor current = DyeColor.byName(CatEarsConfig.earColor, DyeColor.WHITE);
+        this.colorIndex = COLORS.indexOf(current);
+        if (this.colorIndex < 0) this.colorIndex = 0;
     }
 
     @Override
     protected void init() {
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
+        int x = this.width / 2 - 100;
+        int y = this.height / 2 - 50;
 
-        // meow toggle :3
         this.addRenderableWidget(Button.builder(
                 getMeowButtonText(),
                 button -> {
-                    boolean newValue = !CatEarsConfig.enableMeowing;
-                    CatEarsConfig.enableMeowing = newValue;
+                    CatEarsConfig.enableMeowing = !CatEarsConfig.enableMeowing;
                     CatEarsConfig.save();
                     button.setMessage(getMeowButtonText());
-                    // sync with server :3
                     if (this.minecraft != null && this.minecraft.getConnection() != null) {
                         try {
-                            ClientPlayNetworking.send(new MeowConfigPayload(newValue));
+                            ClientPlayNetworking.send(new MeowConfigPayload(CatEarsConfig.enableMeowing));
                         } catch (Exception ignored) {
                         }
                     }
                 }
-        ).bounds(centerX - 100, centerY - 24, 200, 20).build());
+        ).bounds(x, y, 200, 20).build());
 
-        // done button :3
+        y += 24;
+
+        this.addRenderableWidget(Button.builder(
+                getEarsButtonText(),
+                button -> {
+                    CatEarsConfig.showEarsLocally = !CatEarsConfig.showEarsLocally;
+                    CatEarsConfig.save();
+                    button.setMessage(getEarsButtonText());
+                }
+        ).bounds(x, y, 200, 20).build());
+
+        y += 24;
+
+        this.addRenderableWidget(Button.builder(
+                getColorButtonText(),
+                button -> {
+                    colorIndex = (colorIndex + 1) % COLORS.size();
+                    CatEarsConfig.earColor = COLORS.get(colorIndex).getName();
+                    CatEarsConfig.save();
+                    button.setMessage(getColorButtonText());
+                }
+        ).bounds(x, y, 200, 20).build());
+
+        y += 30;
+
         this.addRenderableWidget(Button.builder(
                 Component.literal("Done"),
                 button -> this.onClose()
-        ).bounds(centerX - 100, centerY + 8, 200, 20).build());
+        ).bounds(x, y, 200, 20).build());
     }
 
     private static Component getMeowButtonText() {
-        boolean enabled = CatEarsConfig.enableMeowing;
         return Component.literal("Enable Meowing: ").append(
-                enabled
+                CatEarsConfig.enableMeowing
                         ? Component.literal("ON").withStyle(ChatFormatting.GREEN)
                         : Component.literal("OFF").withStyle(ChatFormatting.RED)
+        );
+    }
+
+    private static Component getEarsButtonText() {
+        return Component.literal("Show Cat Ears: ").append(
+                CatEarsConfig.showEarsLocally
+                        ? Component.literal("ON").withStyle(ChatFormatting.GREEN)
+                        : Component.literal("OFF").withStyle(ChatFormatting.RED)
+        );
+    }
+
+    private Component getColorButtonText() {
+        DyeColor color = COLORS.get(colorIndex);
+        String name = color.getName().substring(0, 1).toUpperCase() + color.getName().substring(1);
+        int hex = color.getTextureDiffuseColor();
+        return Component.literal("Ear Color: ").append(
+                Component.literal(name).withColor(hex)
         );
     }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphicsExtractor, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(guiGraphicsExtractor, mouseX, mouseY, partialTick);
-        // draw title :3
-        guiGraphicsExtractor.centeredText(this.font, this.title, this.width / 2, this.height / 2 - 48, 0xFFFFFFFF);
-        // draw subtitle :3
+        guiGraphicsExtractor.centeredText(this.font, this.title, this.width / 2, this.height / 2 - 72, 0xFFFFFFFF);
         guiGraphicsExtractor.centeredText(this.font,
                 Component.literal("by gayboi.club").withStyle(ChatFormatting.GRAY),
-                this.width / 2, this.height / 2 - 36, 0xFFAAAAAA);
+                this.width / 2, this.height / 2 - 60, 0xFFAAAAAA);
     }
 
     @Override

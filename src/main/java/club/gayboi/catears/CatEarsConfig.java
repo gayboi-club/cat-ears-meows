@@ -14,6 +14,8 @@ public class CatEarsConfig {
     private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("catears.json");
 
     public static boolean enableMeowing = true;
+    public static boolean showEarsLocally = true;
+    public static String earColor = "white";
 
     public static void load() {
         try {
@@ -22,6 +24,8 @@ public class CatEarsConfig {
                     ConfigData data = GSON.fromJson(reader, ConfigData.class);
                     if (data != null) {
                         enableMeowing = data.enableMeowing;
+                        showEarsLocally = data.showEarsLocally;
+                        earColor = data.earColor != null ? data.earColor : "white";
                     }
                 }
             } else {
@@ -35,16 +39,16 @@ public class CatEarsConfig {
     public static void save() {
         try {
             try (FileWriter writer = new FileWriter(CONFIG_PATH.toFile())) {
-                GSON.toJson(new ConfigData(enableMeowing), writer);
+                GSON.toJson(new ConfigData(enableMeowing, showEarsLocally, earColor), writer);
             }
         } catch (Exception e) {
             CatEarsMod.LOGGER.error("Failed to save config", e);
         }
     }
 
-    private static record ConfigData(boolean enableMeowing) {
+    private static record ConfigData(boolean enableMeowing, boolean showEarsLocally, String earColor) {
         private ConfigData() {
-            this(true);
+            this(true, true, "white");
         }
     }
 }

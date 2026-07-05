@@ -19,7 +19,8 @@ public class CatEarsModel extends EntityModel<EntityRenderState> {
 
     @Override
     public void setupAnim(EntityRenderState state) {
-        // head pose copied from parent model at render time :3
+        // pose set manually in CatEarsLayer.submit; empty override prevents
+        // accidental reset if submitModel calls setupAnim internally
     }
 
     public static LayerDefinition createBodyLayer() {
