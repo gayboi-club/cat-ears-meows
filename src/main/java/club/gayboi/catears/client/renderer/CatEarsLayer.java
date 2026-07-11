@@ -5,7 +5,6 @@ import club.gayboi.catears.ModItems;
 import club.gayboi.catears.client.CatEarsClientMod;
 import club.gayboi.catears.client.model.CatEarsModel;
 import club.gayboi.catears.network.SyncEarDataPayload;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -35,23 +34,9 @@ public class CatEarsLayer extends RenderLayer {
     @Override
     public void submit(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int packedLight, EntityRenderState renderState, float yRot, float xRot) {
         HumanoidRenderState state = (HumanoidRenderState) renderState;
-        Identifier texture = null;
+        Player player = findRenderStatePlayer(state);
 
-        var headStack = state.headEquipment;
-        if (!headStack.isEmpty()) {
-            Item item = headStack.getItem();
-            if (isCatEars(item)) {
-                texture = getCatEarsTexture(item);
-            }
-        }
-
-        if (texture == null && CatEarsConfig.showEarsLocally) {
-            Player player = findRenderStatePlayer(state);
-            if (player != null) {
-                texture = getClientSideTexture(player);
-            }
-        }
-
+        Identifier texture = getTexture(state, player);
         if (texture == null) return;
 
         if (getParentModel() instanceof HumanoidModel<?> parentModel) {
@@ -66,26 +51,62 @@ public class CatEarsLayer extends RenderLayer {
         submitNodeCollector.submitModelPart(this.model.head, poseStack, RenderTypes.entityCutout(texture), packedLight, LivingEntityRenderer.getOverlayCoords(state, 0.0F), null);
     }
 
+    private Identifier getTexture(HumanoidRenderState state, Player knownPlayer) {
+        if (!state.headEquipment.isEmpty()) {
+            Item item = state.headEquipment.getItem();
+            if (isCatEars(item)) {
+                return getCatEarsTexture(item);
+            }
+        }
+
+        if (knownPlayer == null) return null;
+
+        Minecraft client = Minecraft.getInstance();
+        Player localPlayer = client.player;
+        if (localPlayer == null) return null;
+
+        boolean isLocal = knownPlayer.getUUID().equals(localPlayer.getUUID());
+
+        if (isLocal) {
+            if (CatEarsConfig.showEarsLocally) {
+                return getEarTextureForColor(CatEarsConfig.earColor);
+            }
+            return null;
+        }
+
+        SyncEarDataPayload data = CatEarsClientMod.remoteEarData.get(knownPlayer.getUUID());
+        if (data != null && data.showEars()) {
+            return getEarTextureForColor(data.earColor());
+        }
+
+        return null;
+    }
+
     private Player findRenderStatePlayer(HumanoidRenderState state) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.level == null || client.player == null) return null;
+
         if (state.nameTag != null) {
-            String name = ChatFormatting.stripFormatting(state.nameTag.getString());
-            var world = Minecraft.getInstance().level;
-            if (world != null && name != null) {
-                for (Player player : world.players()) {
-                    if (player.getName().getString().equals(name)) {
+            String nameTag = ChatFormatting.stripFormatting(state.nameTag.getString());
+            if (nameTag != null) {
+                String localName = ChatFormatting.stripFormatting(client.player.getDisplayName().getString());
+                if (localName != null && localName.equals(nameTag)) {
+                    return client.player;
+                }
+                for (Player player : client.level.players()) {
+                    String pName = ChatFormatting.stripFormatting(player.getDisplayName().getString());
+                    if (pName != null && pName.equals(nameTag)) {
                         return player;
                     }
                 }
             }
         }
-        return null;
-    }
 
-    private Identifier getClientSideTexture(Player player) {
-        SyncEarDataPayload data = CatEarsClientMod.remoteEarData.get(player.getUUID());
-        if (data == null) return null;
-        String colorName = data.earColor();
-        return Identifier.fromNamespaceAndPath("catears", "textures/models/armor/" + colorName + "_cat_ears.png");
+        if (state.entityType == EntityType.PLAYER) {
+            return client.player;
+        }
+
+        return null;
     }
 
     private boolean isCatEars(Item item) {
@@ -95,5 +116,9 @@ public class CatEarsLayer extends RenderLayer {
     private Identifier getCatEarsTexture(Item item) {
         String name = BuiltInRegistries.ITEM.getKey(item).getPath();
         return Identifier.fromNamespaceAndPath("catears", "textures/models/armor/" + name + ".png");
+    }
+
+    private Identifier getEarTextureForColor(String colorName) {
+        return Identifier.fromNamespaceAndPath("catears", "textures/models/armor/" + colorName + "_cat_ears.png");
     }
 }
