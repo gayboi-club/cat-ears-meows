@@ -8,7 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 
 import club.gayboi.catears.CatEarsMod;
 
-public record MeowConfigPayload(boolean enabled) implements CustomPacketPayload {
+public record MeowConfigPayload(boolean enabled, boolean showEars, String earColor) implements CustomPacketPayload {
     public static final Type<MeowConfigPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(CatEarsMod.MOD_ID, "meow_config")
     );
@@ -16,6 +16,8 @@ public record MeowConfigPayload(boolean enabled) implements CustomPacketPayload 
     public static final StreamCodec<FriendlyByteBuf, MeowConfigPayload> STREAM_CODEC =
             StreamCodec.composite(
                     ByteBufCodecs.BOOL, MeowConfigPayload::enabled,
+                    ByteBufCodecs.BOOL, MeowConfigPayload::showEars,
+                    ByteBufCodecs.STRING_UTF8, MeowConfigPayload::earColor,
                     MeowConfigPayload::new
             );
 
