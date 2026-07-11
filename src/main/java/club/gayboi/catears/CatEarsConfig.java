@@ -24,8 +24,14 @@ public class CatEarsConfig {
                     ConfigData data = GSON.fromJson(reader, ConfigData.class);
                     if (data != null) {
                         enableMeowing = data.enableMeowing;
-                        showEarsLocally = data.showEarsLocally;
-                        earColor = data.earColor != null ? data.earColor : "white";
+                        if (data.earColor != null) {
+                            showEarsLocally = data.showEarsLocally;
+                            earColor = data.earColor;
+                        } else {
+                            showEarsLocally = true;
+                            earColor = "white";
+                            save();
+                        }
                     }
                 }
             } else {
