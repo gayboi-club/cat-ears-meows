@@ -22,7 +22,7 @@ import club.gayboi.catears.ModItems;
 import club.gayboi.catears.network.SyncEarDataPayload;
 
 public class ServerEvents {
-    public static record EarData(boolean enabled, boolean showEars, String earColor) {}
+    public record EarData(boolean enabled, boolean showEars, String earColor) {}
 
     private static final Map<UUID, EarData> playerEarData = new ConcurrentHashMap<>();
     private static final Map<UUID, Long> lastHurtSoundTime = new ConcurrentHashMap<>();
@@ -34,32 +34,7 @@ public class ServerEvents {
 
     public static boolean isPlayerMeowEnabled(UUID playerId) {
         EarData data = playerEarData.get(playerId);
-        return data == null || data.enabled;
-    }
-
-    public static EarData getPlayerEarData(UUID playerId) {
-        return playerEarData.get(playerId);
-    }
-
-    public static void syncOnJoin() {
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                EarData data = getPlayerEarData(player.getUUID());
-                if (data != null) {
-                    ServerPlayNetworking.send(player, new SyncEarDataPayload(
-                            player.getUUID(), data.enabled, data.showEars, data.earColor));
-                    for (ServerPlayer other : PlayerLookup.all(server)) {
-                        if (other != player) {
-                            ServerPlayNetworking.send(player, new SyncEarDataPayload(
-                                    other.getUUID(),
-                                    getPlayerEarData(other.getUUID()) != null ? getPlayerEarData(other.getUUID()).enabled : true,
-                                    getPlayerEarData(other.getUUID()) != null ? getPlayerEarData(other.getUUID()).showEars : true,
-                                    getPlayerEarData(other.getUUID()) != null ? getPlayerEarData(other.getUUID()).earColor : "white"));
-                        }
-                    }
-                }
-            }
-        });
+        return data == null || data.enabled();
     }
 
     private static final java.util.regex.Pattern PURR_PATTERN = java.util.regex.Pattern.compile(".*(pr+|:3c?)$");
@@ -71,7 +46,6 @@ public class ServerEvents {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -79,6 +53,7 @@ public class ServerEvents {
         chatMeowSound();
         hurtSound();
         disconnectCleanup();
+        syncOnJoin();
     }
 
     private static void chatMeowSound() {
@@ -139,6 +114,19 @@ public class ServerEvents {
             playerEarData.remove(handler.player.getUUID());
             playerHealths.remove(handler.player.getUUID());
             lastHurtSoundTime.remove(handler.player.getUUID());
+        });
+    }
+
+    private static void syncOnJoin() {
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            ServerPlayer newPlayer = handler.player;
+
+            for (Map.Entry<UUID, EarData> entry : playerEarData.entrySet()) {
+                UUID uuid = entry.getKey();
+                EarData data = entry.getValue();
+                ServerPlayNetworking.send(newPlayer, new SyncEarDataPayload(
+                        uuid, data.enabled(), data.showEars(), data.earColor()));
+            }
         });
     }
 }

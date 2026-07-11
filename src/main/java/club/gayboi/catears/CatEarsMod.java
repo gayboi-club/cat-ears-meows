@@ -47,7 +47,6 @@ public class CatEarsMod implements ModInitializer {
         );
 
         club.gayboi.catears.server.ServerEvents.register();
-        club.gayboi.catears.server.ServerEvents.syncOnJoin();
 
         PayloadTypeRegistry.serverboundPlay().register(MeowConfigPayload.TYPE, MeowConfigPayload.STREAM_CODEC);
         PayloadTypeRegistry.clientboundPlay().register(SyncEarDataPayload.TYPE, SyncEarDataPayload.STREAM_CODEC);

@@ -38,10 +38,12 @@ public class CatEarsClientMod implements ClientModInitializer {
     private static final Pattern PURR_PATTERN = Pattern.compile(".*(pr+|:3c?)$");
 
     private static void playMeowSound(String message, double x, double y, double z) {
+        String raw = message.trim();
+        if (raw.isEmpty()) return;
         var sound = new SoundEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.cat.ambient"), Optional.empty());
-        if (message.endsWith("!!")) {
+        if (raw.endsWith("!!")) {
             sound = new SoundEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.cat.hiss"), Optional.empty());
-        } else if (PURR_PATTERN.matcher(message.trim()).matches()) {
+        } else if (PURR_PATTERN.matcher(raw).matches()) {
             sound = new SoundEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.cat.purr"), Optional.empty());
         }
         playSoundAt(sound, x, y, z);
@@ -79,11 +81,15 @@ public class CatEarsClientMod implements ClientModInitializer {
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             serverHasMod = ClientPlayNetworking.canSend(MeowConfigPayload.TYPE);
-            try {
-                ClientPlayNetworking.send(new MeowConfigPayload(
-                        CatEarsConfig.enableMeowing, CatEarsConfig.showEarsLocally, CatEarsConfig.earColor));
-            } catch (Exception e) {
-                CatEarsMod.LOGGER.debug("Could not send meow config on login", e);
+            if (serverHasMod) {
+                try {
+                    ClientPlayNetworking.send(new MeowConfigPayload(
+                            CatEarsConfig.enableMeowing,
+                            CatEarsConfig.showEarsLocally,
+                            CatEarsConfig.earColor));
+                } catch (Exception e) {
+                    CatEarsMod.LOGGER.debug("Could not send meow config on login", e);
+                }
             }
         });
 
