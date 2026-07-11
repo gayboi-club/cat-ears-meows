@@ -13,6 +13,11 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 public class CatEarsConfigScreen extends Screen {
     private final Screen parent;
 
+    private static final String[] COLORS = {
+            "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
+            "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
+    };
+
     public CatEarsConfigScreen(Screen parent) {
         super(Component.literal("Cat Ears & Meows"));
         this.parent = parent;
@@ -23,7 +28,6 @@ public class CatEarsConfigScreen extends Screen {
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
-        // meow toggle :3
         this.addRenderableWidget(Button.builder(
                 getMeowButtonText(),
                 button -> {
@@ -31,21 +35,54 @@ public class CatEarsConfigScreen extends Screen {
                     CatEarsConfig.enableMeowing = newValue;
                     CatEarsConfig.save();
                     button.setMessage(getMeowButtonText());
-                    // sync with server :3
-                    if (this.minecraft != null && this.minecraft.getConnection() != null) {
-                        try {
-                            ClientPlayNetworking.send(new MeowConfigPayload(newValue));
-                        } catch (Exception ignored) {
-                        }
-                    }
+                    sendConfig();
+                }
+        ).bounds(centerX - 100, centerY - 54, 200, 20).build());
+
+        this.addRenderableWidget(Button.builder(
+                getShowEarsButtonText(),
+                button -> {
+                    boolean newValue = !CatEarsConfig.showEarsLocally;
+                    CatEarsConfig.showEarsLocally = newValue;
+                    CatEarsConfig.save();
+                    button.setMessage(getShowEarsButtonText());
+                    sendConfig();
                 }
         ).bounds(centerX - 100, centerY - 24, 200, 20).build());
 
-        // done button :3
+        this.addRenderableWidget(Button.builder(
+                getColorButtonText(),
+                button -> {
+                    String currentColor = CatEarsConfig.earColor;
+                    int idx = -1;
+                    for (int i = 0; i < COLORS.length; i++) {
+                        if (COLORS[i].equals(currentColor)) {
+                            idx = i;
+                            break;
+                        }
+                    }
+                    idx = (idx + 1) % COLORS.length;
+                    CatEarsConfig.earColor = COLORS[idx];
+                    CatEarsConfig.save();
+                    button.setMessage(getColorButtonText());
+                    sendConfig();
+                }
+        ).bounds(centerX - 100, centerY + 6, 200, 20).build());
+
         this.addRenderableWidget(Button.builder(
                 Component.literal("Done"),
                 button -> this.onClose()
-        ).bounds(centerX - 100, centerY + 8, 200, 20).build());
+        ).bounds(centerX - 100, centerY + 36, 200, 20).build());
+    }
+
+    private void sendConfig() {
+        if (this.minecraft != null && this.minecraft.getConnection() != null) {
+            try {
+                ClientPlayNetworking.send(new MeowConfigPayload(
+                        CatEarsConfig.enableMeowing, CatEarsConfig.showEarsLocally, CatEarsConfig.earColor));
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     private static Component getMeowButtonText() {
@@ -57,15 +94,27 @@ public class CatEarsConfigScreen extends Screen {
         );
     }
 
+    private static Component getShowEarsButtonText() {
+        boolean enabled = CatEarsConfig.showEarsLocally;
+        return Component.literal("Show Ears: ").append(
+                enabled
+                        ? Component.literal("ON").withStyle(ChatFormatting.GREEN)
+                        : Component.literal("OFF").withStyle(ChatFormatting.RED)
+        );
+    }
+
+    private static Component getColorButtonText() {
+        String color = CatEarsConfig.earColor;
+        return Component.literal("Ear Color: " + color.substring(0, 1).toUpperCase() + color.substring(1));
+    }
+
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-        // draw title :3
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 48, 0xFFFFFF);
-        // draw subtitle :3
+        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 78, 0xFFFFFF);
         guiGraphics.drawCenteredString(this.font,
                 Component.literal("by gayboi.club").withStyle(ChatFormatting.GRAY),
-                this.width / 2, this.height / 2 - 36, 0xAAAAAA);
+                this.width / 2, this.height / 2 - 66, 0xAAAAAA);
     }
 
     @Override
