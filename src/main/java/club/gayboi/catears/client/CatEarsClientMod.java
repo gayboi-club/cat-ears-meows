@@ -3,7 +3,6 @@ package club.gayboi.catears.client;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
-import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -11,7 +10,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.ModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegistrationCallback;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -23,9 +21,12 @@ import club.gayboi.catears.CatEarsMod;
 import club.gayboi.catears.client.model.CatEarsModel;
 import club.gayboi.catears.client.renderer.CatEarsLayer;
 import club.gayboi.catears.network.MeowConfigPayload;
+import club.gayboi.catears.network.SyncEarDataPayload;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 public class CatEarsClientMod implements ClientModInitializer {
@@ -34,12 +35,16 @@ public class CatEarsClientMod implements ClientModInitializer {
 
     public static boolean serverHasMod = false;
 
-    private static final char DELIM = '\u200B';
+    public record EarData(boolean enabled, boolean showEars, String earColor, long timestamp) {}
+
+    public static final Map<UUID, EarData> remoteEarData = new ConcurrentHashMap<>();
+
     private static final Pattern PURR_PATTERN = Pattern.compile(".*(pr+|:3c?)$");
     private static final long HURT_COOLDOWN_MS = 200L;
 
     private static float lastHealth = Float.NaN;
     private static long lastHurtSoundTime = 0L;
+
     private static SoundEvent catAmbient() {
         return new SoundEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.cat.ambient"), Optional.empty());
     }
@@ -56,12 +61,6 @@ public class CatEarsClientMod implements ClientModInitializer {
         return new SoundEvent(Identifier.fromNamespaceAndPath("minecraft", "entity.cat.hurt"), Optional.empty());
     }
 
-    private static String stripP2P(String message) {
-        int idx = message.indexOf(DELIM);
-        if (idx >= 0) return message.substring(0, idx);
-        return message;
-    }
-
     private static void playSoundAt(double x, double y, double z, SoundEvent sound) {
         var player = Minecraft.getInstance().player;
         if (player != null) {
@@ -72,7 +71,7 @@ public class CatEarsClientMod implements ClientModInitializer {
     private static void playMeowSound(String message, double x, double y, double z) {
         if (!CatEarsConfig.enableMeowing) return;
 
-        String raw = stripP2P(message).trim();
+        String raw = message.trim();
         if (raw.isEmpty()) return;
 
         SoundEvent sound = catAmbient();
@@ -115,7 +114,6 @@ public class CatEarsClientMod implements ClientModInitializer {
             var player = client.player;
             if (player == null) return;
 
-            // Hurt sound when taking damage
             float health = player.getHealth();
             if (!Float.isNaN(lastHealth) && health < lastHealth) {
                 long now = System.currentTimeMillis();
@@ -125,14 +123,24 @@ public class CatEarsClientMod implements ClientModInitializer {
                 }
             }
             lastHealth = health;
+        });
 
+        ClientSendMessageEvents.CHAT.register(message -> {
+            if (serverHasMod) return;
+            if (!CatEarsConfig.enableMeowing) return;
+            var player = Minecraft.getInstance().player;
+            if (player == null) return;
+            playMeowSound(message, player.getX(), player.getY(), player.getZ());
         });
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             serverHasMod = ClientPlayNetworking.canSend(MeowConfigPayload.TYPE);
             if (serverHasMod) {
                 try {
-                    ClientPlayNetworking.send(new MeowConfigPayload(CatEarsConfig.enableMeowing));
+                    ClientPlayNetworking.send(new MeowConfigPayload(
+                            CatEarsConfig.enableMeowing,
+                            CatEarsConfig.showEarsLocally,
+                            CatEarsConfig.earColor));
                 } catch (Exception e) {
                     CatEarsMod.LOGGER.debug("Could not send meow config on login", e);
                 }
@@ -145,58 +153,15 @@ public class CatEarsClientMod implements ClientModInitializer {
             serverHasMod = false;
             lastHealth = Float.NaN;
             lastHurtSoundTime = 0L;
-            CatEarsP2P.clearCache();
+            remoteEarData.clear();
         });
 
-        ClientSendMessageEvents.MODIFY_CHAT.register(message -> {
-            if (serverHasMod) return message;
-            return CatEarsP2P.encodeOutgoing(message);
-        });
-
-        ClientSendMessageEvents.CHAT.register(message -> {
-            if (serverHasMod) return;
-            if (!CatEarsConfig.enableMeowing) return;
-            if (!CatEarsConfig.showEarsLocally) return;
-
-            var player = Minecraft.getInstance().player;
-            if (player == null) return;
-
-            playMeowSound(message, player.getX(), player.getY(), player.getZ());
-        });
-
-        ClientReceiveMessageEvents.ALLOW_CHAT.register((message, signedMessage, sender, params, timestamp) -> {
-            if (serverHasMod) return true;
-            if (sender == null) return true;
-
-            String raw = message.getString();
-            if (!raw.contains("\u200B")) return true;
-
-            CatEarsP2P.decodeIncoming(raw, sender.id());
-
-            var localPlayer = Minecraft.getInstance().player;
-            if (localPlayer != null && !sender.id().equals(localPlayer.getUUID())) {
-                if (CatEarsP2P.hasPlayerData(sender.id())) {
-                    Player remotePlayer = localPlayer.level().getPlayerByUUID(sender.id());
-                    if (remotePlayer != null) {
-                        playMeowSound(raw, remotePlayer.getX(), remotePlayer.getY(), remotePlayer.getZ());
-                    }
-                }
-            }
-
-            String cleaned = raw.replace("\u200B", "").replace("\u200C", "");
-            if (signedMessage != null) {
-                String cleanContent = signedMessage.signedContent()
-                    .replace("\u200B", "").replace("\u200C", "");
-                Component cleanDecorated = params.decorate(Component.literal(cleanContent));
-                Minecraft.getInstance().gui.hud.getChat().addPlayerMessage(
-                    cleanDecorated, signedMessage.signature(), null);
-            } else {
-                Component cleanDecorated = params.decorate(Component.literal(cleaned));
-                Minecraft.getInstance().gui.hud.getChat().addPlayerMessage(
-                    cleanDecorated, null, null);
-            }
-
-            return false;
+        ClientPlayNetworking.registerGlobalReceiver(SyncEarDataPayload.TYPE, (payload, context) -> {
+            context.client().execute(() -> {
+                remoteEarData.put(payload.playerUuid(), new EarData(
+                        payload.enabled(), payload.showEars(), payload.earColor(),
+                        System.currentTimeMillis()));
+            });
         });
     }
 }

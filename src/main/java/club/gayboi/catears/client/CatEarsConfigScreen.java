@@ -39,12 +39,7 @@ public class CatEarsConfigScreen extends Screen {
                     CatEarsConfig.enableMeowing = !CatEarsConfig.enableMeowing;
                     CatEarsConfig.save();
                     button.setMessage(getMeowButtonText());
-                    if (this.minecraft != null && this.minecraft.getConnection() != null) {
-                        try {
-                            ClientPlayNetworking.send(new MeowConfigPayload(CatEarsConfig.enableMeowing));
-                        } catch (Exception ignored) {
-                        }
-                    }
+                    sendConfig();
                 }
         ).bounds(x, y, 200, 20).build());
 
@@ -56,6 +51,7 @@ public class CatEarsConfigScreen extends Screen {
                     CatEarsConfig.showEarsLocally = !CatEarsConfig.showEarsLocally;
                     CatEarsConfig.save();
                     button.setMessage(getEarsButtonText());
+                    sendConfig();
                 }
         ).bounds(x, y, 200, 20).build());
 
@@ -68,6 +64,7 @@ public class CatEarsConfigScreen extends Screen {
                     CatEarsConfig.earColor = COLORS.get(colorIndex).getName();
                     CatEarsConfig.save();
                     button.setMessage(getColorButtonText());
+                    sendConfig();
                 }
         ).bounds(x, y, 200, 20).build());
 
@@ -102,6 +99,18 @@ public class CatEarsConfigScreen extends Screen {
         return Component.literal("Ear Color: ").append(
                 Component.literal(name).withColor(hex)
         );
+    }
+
+    private void sendConfig() {
+        if (this.minecraft != null && this.minecraft.getConnection() != null) {
+            try {
+                ClientPlayNetworking.send(new MeowConfigPayload(
+                        CatEarsConfig.enableMeowing,
+                        CatEarsConfig.showEarsLocally,
+                        CatEarsConfig.earColor));
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     @Override

@@ -3,7 +3,7 @@ package club.gayboi.catears.client.renderer;
 import club.gayboi.catears.CatEarsConfig;
 import club.gayboi.catears.CatEarsMod;
 import club.gayboi.catears.ModItems;
-import club.gayboi.catears.client.CatEarsP2P;
+import club.gayboi.catears.client.CatEarsClientMod;
 
 import java.util.UUID;
 import club.gayboi.catears.client.model.CatEarsModel;
@@ -103,11 +103,9 @@ public class CatEarsLayer extends RenderLayer {
             return null;
         }
 
-        if (CatEarsP2P.hasPlayerData(target.getUUID())) {
-            String color = CatEarsP2P.getPlayerColor(target.getUUID());
-            if (color != null) {
-                return getEarTextureForColor(color);
-            }
+        CatEarsClientMod.EarData data = CatEarsClientMod.remoteEarData.get(target.getUUID());
+        if (data != null && data.showEars()) {
+            return getEarTextureForColor(data.earColor());
         }
 
         return null;
