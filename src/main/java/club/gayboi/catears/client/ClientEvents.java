@@ -23,6 +23,10 @@ import net.minecraft.world.entity.LivingEntity;
 import club.gayboi.catears.client.model.CatEarsModel;
 import club.gayboi.catears.client.renderer.CatEarsLayer;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 @EventBusSubscriber(modid = CatEarsMod.MOD_ID, value = Dist.CLIENT)
 public class ClientEvents {
     public static final KeyMapping CONFIG_KEY = new KeyMapping(
@@ -31,6 +35,10 @@ public class ClientEvents {
             GLFW.GLFW_KEY_K,
             "key.categories.catears"
     );
+
+    public record EarData(boolean enabled, boolean showEars, String earColor, long timestamp) {}
+
+    public static final Map<UUID, EarData> remoteEarData = new ConcurrentHashMap<>();
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
@@ -41,12 +49,19 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void onPlayerLogin(ClientPlayerNetworkEvent.LoggingIn event) {
-        // sync meow preference on login :3
         try {
-            PacketDistributor.sendToServer(new MeowConfigPayload(CatEarsConfig.ENABLE_MEOWING.get()));
+            PacketDistributor.sendToServer(new MeowConfigPayload(
+                    CatEarsConfig.ENABLE_MEOWING.get(),
+                    CatEarsConfig.SHOW_EARS_LOCALLY.get(),
+                    CatEarsConfig.EAR_COLOR.get()));
         } catch (Exception e) {
             CatEarsMod.LOGGER.debug("Could not send meow config on login", e);
         }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+        remoteEarData.clear();
     }
 
     @EventBusSubscriber(modid = CatEarsMod.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)

@@ -6,12 +6,13 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import club.gayboi.catears.CatEarsMod;
 import club.gayboi.catears.server.ServerEvents;
 
-public record MeowConfigPayload(boolean enabled) implements CustomPacketPayload {
+public record MeowConfigPayload(boolean enabled, boolean showEars, String earColor) implements CustomPacketPayload {
     public static final Type<MeowConfigPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(CatEarsMod.MOD_ID, "meow_config")
     );
@@ -19,6 +20,8 @@ public record MeowConfigPayload(boolean enabled) implements CustomPacketPayload 
     public static final StreamCodec<FriendlyByteBuf, MeowConfigPayload> STREAM_CODEC =
             StreamCodec.composite(
                     ByteBufCodecs.BOOL, MeowConfigPayload::enabled,
+                    ByteBufCodecs.BOOL, MeowConfigPayload::showEars,
+                    ByteBufCodecs.STRING_UTF8, MeowConfigPayload::earColor,
                     MeowConfigPayload::new
             );
 
@@ -30,8 +33,18 @@ public record MeowConfigPayload(boolean enabled) implements CustomPacketPayload 
     public static void handle(MeowConfigPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer serverPlayer) {
-                ServerEvents.setPlayerMeowEnabled(serverPlayer.getUUID(), payload.enabled());
-                CatEarsMod.LOGGER.debug("Player {} set meowing to {}", serverPlayer.getName().getString(), payload.enabled());
+                ServerEvents.setPlayerEarData(
+                        serverPlayer.getUUID(), payload.enabled(), payload.showEars(), payload.earColor());
+                CatEarsMod.LOGGER.debug("Player {} set ear data enabled={} showEars={} color={}",
+                        serverPlayer.getName().getString(), payload.enabled(), payload.showEars(), payload.earColor());
+
+                var syncPayload = new SyncEarDataPayload(
+                        serverPlayer.getUUID(), payload.enabled(), payload.showEars(), payload.earColor());
+                for (ServerPlayer other : serverPlayer.getServer().getPlayerList().getPlayers()) {
+                    if (!other.getUUID().equals(serverPlayer.getUUID())) {
+                        PacketDistributor.sendToPlayer(other, syncPayload);
+                    }
+                }
             }
         });
     }

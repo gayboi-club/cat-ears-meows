@@ -24,13 +24,13 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 import club.gayboi.catears.client.ClientEvents;
 import club.gayboi.catears.network.MeowConfigPayload;
+import club.gayboi.catears.network.SyncEarDataPayload;
 
 @Mod(CatEarsMod.MOD_ID)
 public class CatEarsMod {
     public static final String MOD_ID = "catears";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    // creative tab :3
     public static final DeferredRegister<CreativeModeTab> CREATIVE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MOD_ID);
 
@@ -51,15 +51,12 @@ public class CatEarsMod {
             );
 
     public CatEarsMod(IEventBus modEventBus, ModContainer modContainer) {
-        // register deferred registers :3
         ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
         CREATIVE_TABS.register(modEventBus);
 
-        // register network payloads :3
         modEventBus.addListener(this::registerPayloads);
 
-        // register client config :3
         modContainer.registerConfig(ModConfig.Type.CLIENT, CatEarsConfig.SPEC);
 
         LOGGER.info("Cat Ears & Meows loaded! Meow~ :3");
@@ -72,9 +69,13 @@ public class CatEarsMod {
                 MeowConfigPayload.STREAM_CODEC,
                 MeowConfigPayload::handle
         );
+        registrar.playToClient(
+                SyncEarDataPayload.TYPE,
+                SyncEarDataPayload.STREAM_CODEC,
+                SyncEarDataPayload::handle
+        );
     }
 
-    // client mod bus events :3
     @EventBusSubscriber(modid = MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
         @SubscribeEvent

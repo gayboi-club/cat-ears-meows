@@ -13,34 +13,36 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.ServerChatEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import club.gayboi.catears.CatEarsMod;
 import club.gayboi.catears.ModItems;
+import club.gayboi.catears.network.SyncEarDataPayload;
 
 @EventBusSubscriber(modid = CatEarsMod.MOD_ID)
 public class ServerEvents {
-    // per-player meow pref :3
-    private static final Map<UUID, Boolean> playerMeowPreferences = new ConcurrentHashMap<>();
+    public record EarData(boolean enabled, boolean showEars, String earColor) {}
 
-    public static void setPlayerMeowEnabled(UUID playerId, boolean enabled) {
-        playerMeowPreferences.put(playerId, enabled);
+    private static final Map<UUID, EarData> playerEarData = new ConcurrentHashMap<>();
+
+    public static void setPlayerEarData(UUID playerId, boolean enabled, boolean showEars, String earColor) {
+        playerEarData.put(playerId, new EarData(enabled, showEars, earColor));
     }
 
     public static boolean isPlayerMeowEnabled(UUID playerId) {
-        return playerMeowPreferences.getOrDefault(playerId, true);
+        EarData data = playerEarData.get(playerId);
+        return data == null || data.enabled();
     }
 
     private static final java.util.regex.Pattern PURR_PATTERN = java.util.regex.Pattern.compile(".*(pr+|:3c?)$");
 
     private static boolean isWearingCatEars(ServerPlayer player) {
-        // check helmet slot :3
         ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
         for (var catEarItem : ModItems.CAT_EARS.values()) {
             if (helmet.is(catEarItem.get())) {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -50,10 +52,8 @@ public class ServerEvents {
 
         if (!isWearingCatEars(player)) return;
 
-        // check meow enabled :3
         if (!isPlayerMeowEnabled(player.getUUID())) return;
 
-        // determine sound :3
         String rawText = event.getMessage().getString().trim();
         var sound = SoundEvents.CAT_AMBIENT;
         if (rawText.endsWith("!!")) {
@@ -62,9 +62,8 @@ public class ServerEvents {
             sound = SoundEvents.CAT_PURR;
         }
 
-        // play sound for nearby :3
         player.level().playSound(
-                null, // don't exclude :3
+                null,
                 player.getX(), player.getY(), player.getZ(),
                 sound,
                 SoundSource.PLAYERS,
@@ -73,8 +72,19 @@ public class ServerEvents {
     }
 
     @SubscribeEvent
+    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer newPlayer) {
+            for (Map.Entry<UUID, EarData> entry : playerEarData.entrySet()) {
+                UUID uuid = entry.getKey();
+                EarData data = entry.getValue();
+                PacketDistributor.sendToPlayer(newPlayer, new SyncEarDataPayload(
+                        uuid, data.enabled(), data.showEars(), data.earColor()));
+            }
+        }
+    }
+
+    @SubscribeEvent
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-        // cleanup prefs on logout :3
-        playerMeowPreferences.remove(event.getEntity().getUUID());
+        playerEarData.remove(event.getEntity().getUUID());
     }
 }
