@@ -37,7 +37,7 @@ processResources {
             mod_license        : project.mod_license,
             mod_authors        : project.mod_authors,
             mod_description    : project.mod_description,
-            minecraft_version  : project.minecraft_version,
+            game_version       : project.game_version,
             loader_version     : project.loader_version,
     ]
     inputs.properties replaceProperties
