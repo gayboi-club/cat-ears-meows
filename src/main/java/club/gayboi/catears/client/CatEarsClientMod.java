@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 
 public class CatEarsClientMod implements ClientModInitializer {
     public static final ModelLayerLocation CAT_EARS_LAYER = new ModelLayerLocation(
-            ResourceLocation.fromNamespaceAndPath(CatEarsMod.MOD_ID, "cat_ears"), "main");
+            new ResourceLocation(CatEarsMod.MOD_ID, "cat_ears"), "main");
 
     public static boolean serverHasMod = false;
     public static final Map<UUID, SyncEarDataPayload> remoteEarData = new ConcurrentHashMap<>();
@@ -93,8 +93,8 @@ public class CatEarsClientMod implements ClientModInitializer {
             remoteEarData.clear();
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(SyncEarDataPayload.TYPE, (payload, context) -> {
-            context.client().execute(() -> {
+        ClientPlayNetworking.registerGlobalReceiver(SyncEarDataPayload.TYPE, (payload, player, responseSender) -> {
+            Minecraft.getInstance().execute(() -> {
                 remoteEarData.put(payload.playerUuid(), payload);
             });
         });

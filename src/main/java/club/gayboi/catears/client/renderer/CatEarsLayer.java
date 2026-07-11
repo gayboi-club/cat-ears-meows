@@ -49,7 +49,7 @@ public class CatEarsLayer<T extends LivingEntity, M extends EntityModel<T>> exte
         }
 
         VertexConsumer vertexconsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(texture));
-        this.model.head.render(pPoseStack, vertexconsumer, pPackedLight, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
+        this.model.head.render(pPoseStack, vertexconsumer, pPackedLight, OverlayTexture.NO_OVERLAY);
     }
 
     private ResourceLocation getClientSideTexture(LivingEntity entity) {
@@ -81,10 +81,10 @@ public class CatEarsLayer<T extends LivingEntity, M extends EntityModel<T>> exte
 
     private ResourceLocation getCatEarsTexture(Item item) {
         String name = BuiltInRegistries.ITEM.getKey(item).getPath();
-        return ResourceLocation.fromNamespaceAndPath("catears", "textures/models/armor/" + name + ".png");
+        return new ResourceLocation("catears", "textures/models/armor/" + name + ".png");
     }
 
     private ResourceLocation getEarTextureForColor(String colorName) {
-        return ResourceLocation.fromNamespaceAndPath("catears", "textures/models/armor/" + colorName + "_cat_ears.png");
+        return new ResourceLocation("catears", "textures/models/armor/" + colorName + "_cat_ears.png");
     }
 }

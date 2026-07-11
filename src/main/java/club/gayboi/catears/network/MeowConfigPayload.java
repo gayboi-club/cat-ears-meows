@@ -1,28 +1,31 @@
 package club.gayboi.catears.network;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
 
 import club.gayboi.catears.CatEarsMod;
 
-public record MeowConfigPayload(boolean enabled, boolean showEars, String earColor) implements CustomPacketPayload {
-    public static final Type<MeowConfigPayload> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(CatEarsMod.MOD_ID, "meow_config")
+public record MeowConfigPayload(boolean enabled, boolean showEars, String earColor) implements FabricPacket {
+    public static final PacketType<MeowConfigPayload> TYPE = PacketType.create(
+            new ResourceLocation(CatEarsMod.MOD_ID, "meow_config"),
+            MeowConfigPayload::read
     );
 
-    public static final StreamCodec<FriendlyByteBuf, MeowConfigPayload> STREAM_CODEC =
-            StreamCodec.composite(
-                    ByteBufCodecs.BOOL, MeowConfigPayload::enabled,
-                    ByteBufCodecs.BOOL, MeowConfigPayload::showEars,
-                    ByteBufCodecs.STRING_UTF8, MeowConfigPayload::earColor,
-                    MeowConfigPayload::new
-            );
+    private static MeowConfigPayload read(FriendlyByteBuf buf) {
+        return new MeowConfigPayload(buf.readBoolean(), buf.readBoolean(), buf.readUtf());
+    }
 
     @Override
-    public Type<? extends CustomPacketPayload> type() {
+    public void write(FriendlyByteBuf buf) {
+        buf.writeBoolean(enabled);
+        buf.writeBoolean(showEars);
+        buf.writeUtf(earColor);
+    }
+
+    @Override
+    public PacketType<?> getType() {
         return TYPE;
     }
 }

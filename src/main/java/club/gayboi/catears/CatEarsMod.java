@@ -6,7 +6,6 @@ import com.mojang.logging.LogUtils;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
@@ -31,7 +30,7 @@ public class CatEarsMod implements ModInitializer {
         ModItems.register();
 
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
-                ResourceLocation.fromNamespaceAndPath(MOD_ID, "cat_ears_tab"),
+                new ResourceLocation(MOD_ID, "cat_ears_tab"),
                 FabricItemGroup.builder()
                         .title(Component.translatable("itemGroup.catears"))
                         .icon(() -> ModItems.CAT_EARS.get(DyeColor.WHITE).getDefaultInstance())
@@ -48,25 +47,19 @@ public class CatEarsMod implements ModInitializer {
 
         club.gayboi.catears.server.ServerEvents.register();
 
-        PayloadTypeRegistry.playC2S().register(MeowConfigPayload.TYPE, MeowConfigPayload.STREAM_CODEC);
-        PayloadTypeRegistry.playS2C().register(SyncEarDataPayload.TYPE, SyncEarDataPayload.STREAM_CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(MeowConfigPayload.TYPE, (payload, player, responseSender) -> {
+            club.gayboi.catears.server.ServerEvents.setPlayerEarData(
+                    player.getUUID(), payload.enabled(), payload.showEars(), payload.earColor());
+            LOGGER.debug("Player {} set ear data enabled={} showEars={} color={}",
+                    player.getName().getString(), payload.enabled(), payload.showEars(), payload.earColor());
 
-        ServerPlayNetworking.registerGlobalReceiver(MeowConfigPayload.TYPE, (payload, context) -> {
-            context.server().execute(() -> {
-                var player = context.player();
-                club.gayboi.catears.server.ServerEvents.setPlayerEarData(
-                        player.getUUID(), payload.enabled(), payload.showEars(), payload.earColor());
-                LOGGER.debug("Player {} set ear data enabled={} showEars={} color={}",
-                        player.getName().getString(), payload.enabled(), payload.showEars(), payload.earColor());
-
-                var syncPayload = new SyncEarDataPayload(
-                        player.getUUID(), payload.enabled(), payload.showEars(), payload.earColor());
-                for (ServerPlayer other : PlayerLookup.all(context.server())) {
-                    if (!other.getUUID().equals(player.getUUID())) {
-                        ServerPlayNetworking.send(other, syncPayload);
-                    }
+            var syncPayload = new SyncEarDataPayload(
+                    player.getUUID(), payload.enabled(), payload.showEars(), payload.earColor());
+            for (ServerPlayer other : PlayerLookup.all(player.getServer())) {
+                if (!other.getUUID().equals(player.getUUID())) {
+                    ServerPlayNetworking.send(other, syncPayload);
                 }
-            });
+            }
         });
 
         LOGGER.info("Cat Ears & Meows loaded! Meow~ :3");

@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.world.item.DyeColor;
 
 import club.gayboi.catears.CatEarsConfig;
@@ -89,9 +90,9 @@ public class CatEarsConfigScreen extends Screen {
     private Component getColorButtonText() {
         DyeColor color = COLORS.get(colorIndex);
         String name = color.getName().substring(0, 1).toUpperCase() + color.getName().substring(1);
-        int hex = color.getTextureDiffuseColor();
+        int hex = color.getFireworkColor();
         return Component.literal("Ear Color: ").append(
-                Component.literal(name).withColor(hex)
+                Component.literal(name).withStyle(Style.EMPTY.withColor(hex))
         );
     }
 
