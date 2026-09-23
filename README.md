@@ -10,22 +10,24 @@ The crafting recipe :3
 
 ![Crafting recipe](https://cdn.modrinth.com/data/cached_images/fcd0b747a6040fef0925a4ecdcf6272eed3865c7.png)
 
-The keybind to configure your cat ears (currently there's just a toggle)
-
-![Keybind in settings](https://cdn.modrinth.com/data/cached_images/2c416edda59854bd956ef2187563bcdf71811d3d.png)
-
-Cat ears can be worn in the helmet slot :3 
-![glitchy wearing cat ears :3c](https://cdn.modrinth.com/data/cached_images/17f6f6702d81429001abcd26ec71d8d46e26c37a.png)
+Cat ears can be worn in the helmet slot :3
+![wearing cat ears :3c](https://cdn.modrinth.com/data/cached_images/17f6f6702d81429001abcd26ec71d8d46e26c37a.png)
 
 ## Usage
 
-When enabled, whenever you type in chat, a meow sound plays :3c
+Craft yourself a pair of cat ears, put them on, and everything just works :3
+
+As soon as you wear cat ears, once you type in chat, a meow sound plays :3c
 
 By default as a *cat*ch-all, every message sends a meow.
 
 If you message ends with "!!", then the hissing sound effect plays :P
 
 And also if you do "prrr" or ":3c" at the end of your message, then you purr >.<
+
+And if you get hurt... you let out a little mew :c
+
+Everyone around you can hear it. No configuration, no toggles. Wear the ears, be the cat.
 
 -----
 
