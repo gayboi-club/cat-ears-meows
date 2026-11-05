@@ -10,8 +10,8 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 
@@ -45,14 +45,12 @@ public class CatEarsLayer<S extends HumanoidRenderState, M extends HumanoidModel
         parent.root().translateAndRotate(poseStack);
         parent.translateToHead(poseStack);
 
+        RenderType renderType = state.headEquipment.hasFoil()
+                ? RenderTypes.armorCutoutNoCullGlint(texture)
+                : RenderTypes.entityCutout(texture);
         int overlay = LivingEntityRenderer.getOverlayCoords(state, 0.0F);
-        collector.submitModel(this.model, state, poseStack, RenderTypes.entityCutout(texture),
-                packedLight, overlay, -1, null, state.outlineColor, null);
-
-        if (state.headEquipment.hasFoil()) {
-            collector.order(1).submitModel(this.model, state, poseStack, RenderTypes.armorEntityGlint(),
-                    packedLight, OverlayTexture.NO_OVERLAY, -1, null, 0, null);
-        }
+        collector.submitModel(this.model, state, poseStack, renderType,
+                packedLight, overlay, -1, null, state.outlineColor);
 
         poseStack.popPose();
     }
