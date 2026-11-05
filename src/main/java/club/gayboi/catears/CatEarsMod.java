@@ -1,8 +1,7 @@
 package club.gayboi.catears;
 
 import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
+import org.slf4j.LoggerFactory;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
@@ -12,13 +11,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.DyeColor;
 
+import club.gayboi.catears.server.ServerEvents;
+
 public class CatEarsMod implements ModInitializer {
     public static final String MOD_ID = "catears";
-    public static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     @Override
     public void onInitialize() {
-        ModArmorMaterials.register();
         ModItems.register();
 
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
@@ -26,18 +26,11 @@ public class CatEarsMod implements ModInitializer {
                 FabricCreativeModeTab.builder()
                         .title(Component.translatable("itemGroup.catears"))
                         .icon(() -> ModItems.CAT_EARS.get(DyeColor.WHITE).getDefaultInstance())
-                        .displayItems((params, output) -> {
-                            for (DyeColor color : DyeColor.values()) {
-                                var item = ModItems.CAT_EARS.get(color);
-                                if (item != null) {
-                                    output.accept(item);
-                                }
-                            }
-                        })
+                        .displayItems((params, output) -> ModItems.CAT_EARS.values().forEach(output::accept))
                         .build()
         );
 
-        club.gayboi.catears.server.ServerEvents.register();
+        ServerEvents.register();
 
         LOGGER.info("Cat Ears & Meows loaded! Meow~ :3");
     }

@@ -1,69 +1,59 @@
 package club.gayboi.catears.client.renderer;
 
-import club.gayboi.catears.ModItems;
-import club.gayboi.catears.client.model.CatEarsModel;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.HumanoidModel;
-import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
-import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 
-public class CatEarsLayer extends RenderLayer {
-    private final CatEarsModel model;
+import club.gayboi.catears.CatEarsMod;
+import club.gayboi.catears.ModItems;
+import club.gayboi.catears.client.model.CatEarsModel;
 
-    public CatEarsLayer(RenderLayerParent<?, ?> renderer, CatEarsModel model) {
+public class CatEarsLayer<S extends HumanoidRenderState, M extends HumanoidModel<S>> extends RenderLayer<S, M> {
+    private final CatEarsModel model;
+    private final Map<Item, Identifier> textures = new IdentityHashMap<>();
+
+    public CatEarsLayer(RenderLayerParent<S, M> renderer, CatEarsModel model) {
         super(renderer);
         this.model = model;
+        ModItems.CAT_EARS.forEach((color, item) -> textures.put(item,
+                Identifier.fromNamespaceAndPath(CatEarsMod.MOD_ID,
+                        "textures/models/armor/" + color.getName() + "_cat_ears.png")));
     }
 
     @Override
-    public void submit(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int packedLight, EntityRenderState renderState, float yRot, float xRot) {
-        if (!(renderState instanceof HumanoidRenderState state)) {
-            return;
+    public void submit(PoseStack poseStack, SubmitNodeCollector collector, int packedLight, S state, float yRot, float xRot) {
+        if (state.headEquipment.isEmpty()) return;
+
+        Identifier texture = textures.get(state.headEquipment.getItem());
+        if (texture == null) return;
+
+        M parent = getParentModel();
+        if (!parent.head.visible) return;
+
+        poseStack.pushPose();
+        parent.root().translateAndRotate(poseStack);
+        parent.translateToHead(poseStack);
+
+        int overlay = LivingEntityRenderer.getOverlayCoords(state, 0.0F);
+        collector.submitModel(this.model, state, poseStack, RenderTypes.entityCutout(texture),
+                packedLight, overlay, -1, null, state.outlineColor, null);
+
+        if (state.headEquipment.hasFoil()) {
+            collector.order(1).submitModel(this.model, state, poseStack, RenderTypes.armorEntityGlint(),
+                    packedLight, OverlayTexture.NO_OVERLAY, -1, null, 0, null);
         }
 
-        if (state.headEquipment.isEmpty()) {
-            return;
-        }
-
-        Item item = state.headEquipment.getItem();
-        if (!isCatEars(item)) {
-            return;
-        }
-
-        if (getParentModel() instanceof HumanoidModel<?> parentModel) {
-            ModelPart parentHead = parentModel.head;
-            ModelPart myHead = this.model.head;
-
-            myHead.setRotation(parentHead.xRot, parentHead.yRot, parentHead.zRot);
-            myHead.x = parentHead.x;
-            myHead.y = parentHead.y;
-            myHead.z = parentHead.z;
-        }
-
-        Identifier texture = getCatEarsTexture(item);
-        int overlay = LivingEntityRenderer.getOverlayCoords((LivingEntityRenderState) renderState, 0.0F);
-        submitNodeCollector.submitModel(this.model, renderState, poseStack,
-                RenderTypes.entityCutout(texture), packedLight, overlay, -1,
-                null, renderState.outlineColor, null);
-    }
-
-    private boolean isCatEars(Item item) {
-        return ModItems.CAT_EARS.containsValue(item);
-    }
-
-    private Identifier getCatEarsTexture(Item item) {
-        String name = BuiltInRegistries.ITEM.getKey(item).getPath();
-        return Identifier.fromNamespaceAndPath("catears", "textures/models/armor/" + name + ".png");
+        poseStack.popPose();
     }
 }

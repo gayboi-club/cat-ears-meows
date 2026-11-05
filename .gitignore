@@ -21,3 +21,10 @@ Thumbs.db
 
 # Minecraft
 run/
+
+# Eclipse / stale IDE output
+bin/
+.eclipse/
+.classpath
+.project
+.settings/

@@ -15,5 +15,7 @@
   "item.catears.green_cat_ears": "Green Cat Ears",
   "item.catears.red_cat_ears": "Red Cat Ears",
   "item.catears.black_cat_ears": "Black Cat Ears",
-  "itemGroup.catears": "Cat Ears & Meows"
+  "itemGroup.catears": "Cat Ears & Meows",
+  "tag.item.catears.cat_ears": "Cat Ears",
+  "tag.item.catears.repairs_cat_ears": "Cat Ears Repair Materials"
 }

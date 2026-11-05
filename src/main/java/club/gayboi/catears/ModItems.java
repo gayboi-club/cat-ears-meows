@@ -1,5 +1,6 @@
 package club.gayboi.catears;
 
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -10,18 +11,21 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.equipment.ArmorType;
 
-public class ModItems {
-    // all 16 color variants :3
-    public static final Map<DyeColor, Item> CAT_EARS = new EnumMap<>(DyeColor.class);
+public final class ModItems {
+    private static final Map<DyeColor, Item> CAT_EARS_BY_COLOR = new EnumMap<>(DyeColor.class);
+
+    public static final Map<DyeColor, Item> CAT_EARS = Collections.unmodifiableMap(CAT_EARS_BY_COLOR);
+
+    private ModItems() {}
 
     public static void register() {
         for (DyeColor color : DyeColor.values()) {
-            String name = color.getName() + "_cat_ears";
             ResourceKey<Item> itemKey = ResourceKey.create(
                     Registries.ITEM,
-                    Identifier.fromNamespaceAndPath(CatEarsMod.MOD_ID, name)
+                    Identifier.fromNamespaceAndPath(CatEarsMod.MOD_ID, color.getName() + "_cat_ears")
             );
             Item item = Registry.register(
                     BuiltInRegistries.ITEM,
@@ -32,7 +36,11 @@ public class ModItems {
                                     .setId(itemKey)
                     )
             );
-            CAT_EARS.put(color, item);
+            CAT_EARS_BY_COLOR.put(color, item);
         }
+    }
+
+    public static boolean isCatEars(ItemStack stack) {
+        return !stack.isEmpty() && CAT_EARS_BY_COLOR.containsValue(stack.getItem());
     }
 }
